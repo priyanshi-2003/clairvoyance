@@ -3,7 +3,7 @@ name: Build & Push Docker Image to AWS ECR (Beta)
 on:
   push:
     branches:
-      - release   # triggers when you push to release branch
+      - testing   # triggers when you push to release branch
 
 permissions:
   id-token: write   # required for AWS OIDC
@@ -16,8 +16,8 @@ jobs:
     env:
       PROJECT_NAME: clairvoyance
       AWS_REGION: ap-south-1
-      AWS_BETA_ACCOUNT_ID: "701342709052"
-      AWS_BETA_REPO: nimble
+      AWS_BETA_ACCOUNT_ID: "992382818809"
+      AWS_BETA_REPO: clairvoyance
 
     steps:
       - name: Checkout code
@@ -27,7 +27,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::527792009125:role/GitHubOIDC   # <-- create this in AWS Beta
+          role-to-assume: arn:aws:iam::992382818809:role/GitHubActions-ECR-PushPolicy   # <-- create this in AWS Beta
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -46,6 +46,6 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_BETA_REPO }}/${{ env.PROJECT_NAME }}:${{ env.SHORT_SHA }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_BETA_REPO }}:${{ env.SHORT_SHA }}
           provenance: false
           sbom: false
