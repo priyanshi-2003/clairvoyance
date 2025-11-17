@@ -15,6 +15,7 @@ from pipecat.transports.daily.utils import DailyRESTHelper
 
 from app import __version__
 from app.api.routers import automatic, breeze_buddy
+from app.config.redis import close_redis_connections, get_redis_factory
 from app.core.config import (
     DAILY_API_KEY,
     DAILY_API_URL,
@@ -53,6 +54,13 @@ from app.helpers.automatic.session_manager import (
 )
 from app.schemas import (
     AutomaticVoiceUserConnectRequest,
+)
+
+# Redis imports
+from app.services.redis import (
+    get_refresh_worker,
+    start_refresh_worker,
+    stop_refresh_worker,
 )
 
 # Store Daily API helpers and room pool
@@ -116,9 +124,53 @@ async def lifespan(_app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize voice agent pool: {e}")
 
+    # Initialize Redis services
+    try:
+        from app.config.redis import RedisConfig
+
+        redis_config = RedisConfig()
+
+        if redis_config.is_redis_configured():
+            await start_refresh_worker()
+            logger.info("Redis refresh worker started")
+        else:
+            logger.info(
+                "Redis services disabled - Redis not configured or explicitly disabled"
+            )
+    except Exception as e:
+        logger.error(f"Failed to start Redis refresh worker: {e}")
+
     yield
 
     logger.info("Application shutdown event triggered...")
+    # Stop Redis refresh worker
+    try:
+        from app.config.redis import RedisConfig
+
+        redis_config = RedisConfig()
+
+        if redis_config.is_redis_configured():
+            await stop_refresh_worker()
+            logger.info("Redis refresh worker stopped")
+        else:
+            logger.info("Redis services were disabled - no worker to stop")
+    except Exception as e:
+        logger.error(f"Error stopping Redis refresh worker: {e}")
+
+    # Close Redis connections
+    try:
+        from app.config.redis import RedisConfig
+
+        redis_config = RedisConfig()
+
+        if redis_config.is_redis_configured():
+            await close_redis_connections()
+            logger.info("Redis connections closed")
+        else:
+            logger.info("Redis services were disabled - no connections to close")
+    except Exception as e:
+        logger.error(f"Error closing Redis connections: {e}")
+
     # Cleanup room pool
     await cleanup_room_pool()
     # Cleanup voice agent pool
@@ -362,6 +414,52 @@ async def database_health_check():
                 "status": "unhealthy",
                 "database": "disconnected",
                 "message": f"Database connection failed: {str(e)}",
+            },
+        )
+
+
+# Redis health check endpoint
+@app.get("/health/redis")
+async def redis_health_check():
+    """Check Redis connectivity and refresh worker status."""
+    logger.info("Redis health check endpoint called")
+    try:
+        # Check Redis connection
+        factory = await get_redis_factory()
+        redis_health = await factory.health_check()
+
+        # Check refresh worker status
+        worker = await get_refresh_worker()
+        worker_status = worker.get_status()
+
+        if redis_health["status"] == "healthy":
+            return JSONResponse(
+                {
+                    "status": "healthy",
+                    "redis": redis_health,
+                    "refresh_worker": worker_status,
+                    "message": "Redis services are healthy",
+                }
+            )
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "unhealthy",
+                    "redis": redis_health,
+                    "refresh_worker": worker_status,
+                    "message": "Redis connection is unhealthy",
+                },
+            )
+    except Exception as e:
+        logger.error(f"Redis health check failed: {e}")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "unhealthy",
+                "redis": {"status": "error", "error": str(e)},
+                "refresh_worker": {"status": "unknown"},
+                "message": f"Redis health check failed: {str(e)}",
             },
         )
 
