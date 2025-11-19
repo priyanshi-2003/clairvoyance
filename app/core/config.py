@@ -457,6 +457,36 @@ ENABLE_BREEZE_BUDDY_USER_INTERRUPTION = (
     os.environ.get("ENABLE_BREEZE_BUDDY_USER_INTERRUPTION", "false").lower() == "true"
 )
 
+# DevCycle Configuration for Hybrid Config Engine
+DEVCYCLE_ENABLED = os.environ.get("DEVCYCLE_ENABLED", "false").lower() == "true"
+DEVCYCLE_SERVICE_TOKEN = os.environ.get("DEVCYCLE_SERVICE_TOKEN", "")
+DEVCYCLE_API_ENDPOINT = os.environ.get(
+    "DEVCYCLE_API_ENDPOINT", "https://sdk-api.devcycle.com"
+)
+DEVCYCLE_TIMEOUT = float(os.environ.get("DEVCYCLE_TIMEOUT", "5.0"))
+DEVCYCLE_USER_ID = os.environ.get("DEVCYCLE_USER_ID", "system")
+DEVCYCLE_USER_EMAIL = os.environ.get("DEVCYCLE_USER_EMAIL", "system@clairvoyance.ai")
+
+# Hybrid Configuration Engine Settings
+HYBRID_CONFIG_ENABLED = (
+    os.environ.get("HYBRID_CONFIG_ENABLED", "false").lower() == "true"
+)
+HYBRID_CONFIG_CACHE_NAMESPACE = os.environ.get(
+    "HYBRID_CONFIG_CACHE_NAMESPACE", "config"
+)
+HYBRID_CONFIG_HIGH_FREQUENCY_TTL = int(
+    os.environ.get("HYBRID_CONFIG_HIGH_FREQUENCY_TTL", "30")
+)
+HYBRID_CONFIG_MEDIUM_FREQUENCY_TTL = int(
+    os.environ.get("HYBRID_CONFIG_MEDIUM_FREQUENCY_TTL", "300")
+)
+HYBRID_CONFIG_HIGH_FREQUENCY_REFRESH = int(
+    os.environ.get("HYBRID_CONFIG_HIGH_FREQUENCY_REFRESH", "30")
+)
+HYBRID_CONFIG_MEDIUM_FREQUENCY_REFRESH = int(
+    os.environ.get("HYBRID_CONFIG_MEDIUM_FREQUENCY_REFRESH", "300")
+)
+
 # Dashboard Authentication
 BREEZE_BUDDY_DASHBOARD_USERNAME = os.getenv("BREEZE_BUDDY_DASHBOARD_USERNAME", "")
 BREEZE_BUDDY_DASHBOARD_PASSWORD = os.getenv("BREEZE_BUDDY_DASHBOARD_PASSWORD", "")
