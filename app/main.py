@@ -55,6 +55,7 @@ from app.helpers.automatic.session_manager import (
 from app.schemas import (
     AutomaticVoiceUserConnectRequest,
 )
+from app.services.config.feature_flags import get_feature_store
 
 # Redis imports
 from app.services.redis import (
@@ -139,6 +140,16 @@ async def lifespan(_app: FastAPI):
             )
     except Exception as e:
         logger.error(f"Failed to start Redis refresh worker: {e}")
+
+    # Initialize Feature Flags from DevCycle
+    try:
+        feature_store = get_feature_store()
+        await feature_store.initialize_from_devcycle()
+        logger.info(
+            f"Feature flags initialized: {feature_store.get_flag_count()} flags loaded"
+        )
+    except Exception as e:
+        logger.error(f"Failed to initialize feature flags: {e}")
 
     yield
 
@@ -460,6 +471,68 @@ async def redis_health_check():
                 "redis": {"status": "error", "error": str(e)},
                 "refresh_worker": {"status": "unknown"},
                 "message": f"Redis health check failed: {str(e)}",
+            },
+        )
+
+
+# DevCycle webhook endpoint
+@app.post("/webhooks/devcycle")
+async def devcycle_webhook(webhook_data: Dict[str, Any]):
+    """Handle DevCycle feature flag updates via webhook"""
+    logger.info("DevCycle webhook received")
+    try:
+        feature_store = get_feature_store()
+        await feature_store.update_flag_from_webhook(webhook_data)
+
+        return JSONResponse(
+            {
+                "status": "success",
+                "message": "Feature flag updated successfully",
+                "timestamp": webhook_data.get("date"),
+                "flag_count": feature_store.get_flag_count(),
+            }
+        )
+    except Exception as e:
+        logger.error(f"Failed to process DevCycle webhook: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to update feature flag: {str(e)}",
+            },
+        )
+
+
+# Feature flags health check endpoint
+@app.get("/health/feature-flags")
+async def feature_flags_health_check():
+    """Check feature flags status"""
+    logger.info("Feature flags health check endpoint called")
+    try:
+        feature_store = get_feature_store()
+
+        return JSONResponse(
+            {
+                "status": (
+                    "healthy" if feature_store.is_initialized() else "not_initialized"
+                ),
+                "flag_count": feature_store.get_flag_count(),
+                "last_updated": (
+                    feature_store.get_last_updated().isoformat()
+                    if feature_store.get_last_updated()
+                    else None
+                ),
+                "message": "Feature flags are operational",
+            }
+        )
+    except Exception as e:
+        logger.error(f"Feature flags health check failed: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "unhealthy",
+                "error": str(e),
+                "message": "Feature flags health check failed",
             },
         )
 
