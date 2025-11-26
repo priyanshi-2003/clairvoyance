@@ -2,9 +2,6 @@ import os
 
 from loguru import logger
 
-# Environment variables already loaded by run.py - no need to load again
-# Import get_config after environment is loaded (will work due to run.py initialization order)
-
 # --- Configuration ---
 
 
