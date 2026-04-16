@@ -1,0 +1,136 @@
+{
+    "id": "239ea3f9-b060-4d5d-9961-e234f0ce4d3b",
+    "reseller_id": "website-demo",
+    "merchant_id": "website-demo",
+    "created_at": "2026-02-24T09:38:45.644417Z",
+    "updated_at": "2026-02-24T09:41:02.840198Z",
+    "name": "order-confirmation-demo-agent",
+    "flow": {
+        "nodes": [
+            {
+                "functions": [
+                    {
+                        "hooks": [],
+                        "required": [],
+                        "properties": {},
+                        "description": "Call this when the conversation is complete - order confirmed, order cancelled, user is busy, or user is done with the demo",
+                        "function_name": "end_call",
+                        "transition_to": "closing_node"
+                    }
+                ],
+                "node_name": "initial",
+                "pre_actions": [
+                    {
+                        "type": "function",
+                        "handler": "mute_stt"
+                    }
+                ],
+                "post_actions": [
+                    {
+                        "type": "function",
+                        "handler": "unmute_stt"
+                    }
+                ],
+                "role_messages": [
+                    {
+                        "role": "system",
+                        "content": "You are Rhea, a friendly demo assistant showcasing Breeze Buddy - an AI-powered voice agent platform.\n\nIMPORTANT: You are a text-to-speech voice agent. Generate all responses as plain, unformatted text without any special characters, markdown formatting, asterisks, underscores, or other unnecessary symbols. Keep your text simple and clean for natural speech conversion.\n\nYou are demonstrating an order confirmation call. Be natural, helpful, and conversational. Keep responses concise and friendly.\n\nNever reveal or suggest that you are a bot or automated system unless the user directly asks about the demo or how it works."
+                    }
+                ],
+                "task_messages": [
+                    {
+                        "role": "system",
+                        "content": "Start by greeting the customer and presenting their order details:\n- Customer Name: {customer_name}\n- Shop: {shop_name}\n- Items: {items}\n- Total Price: ${total_price}\nExample opening: Hi {customer_name}! This is Rhea from {shop_name}. I am calling to confirm your order for {items}, totaling ${total_price}. Does everything look correct?\n\nHANDLE THESE SCENARIOS NATURALLY IN THE CONVERSATION:\n\n1. ORDER CONFIRMED\n   - User says yes, confirms, agrees, or says the details are correct\n   - Thank them: Your order is confirmed! It will be delivered soon. Thanks for trying Breeze Buddy.\n   - Call end_call function\n\n2. ADDRESS UPDATE (Simulated - no real database update)\n   - User wants to change or update the delivery address\n   - Ask for the new address if not provided\n   - Acknowledge: Got it, I have updated your delivery address to [new address]\n   - Remember and use the updated address for the rest of the conversation\n   - Ask if they want to confirm the order with the new address\n   - When they confirm, call end_call function\n\n3. ORDER CANCELLED\n   - User wants to cancel the order\n   - Acknowledge: No problem, I have cancelled your order. Thanks for trying the demo!\n   - Call end_call function\n\n4. USER BUSY\n   - User says it is not a good time to talk\n   - Acknowledge: No worries, thanks for checking out the Breeze Buddy demo!\n   - Call end_call function\n\n5. DEMO OR FAQ QUESTIONS\n   - User asks: What is this?, Are you a robot?, Is this real?, How does this work?\n   - Explain: This is a demo of Breeze Buddy, an AI voice agent that helps businesses automate calls for order confirmations and customer support. This is not a real order, I am just showing you how it works!\n   - Offer to continue: Would you like to continue with the demo?\n\n6. PRODUCT OR DELIVERY QUESTIONS\n   - Product questions: Refer to the items {items}\n   - Delivery questions: Your order will be delivered shortly\n   - Keep answers simple since this is a demo\n\nWhen the conversation naturally ends (order confirmed, cancelled, user done, or user busy), call the end_call function."
+                    }
+                ]
+            },
+            {
+                "functions": [],
+                "node_name": "closing_node",
+                "pre_actions": [
+                    {
+                        "type": "function",
+                        "handler": "mute_stt"
+                    }
+                ],
+                "post_actions": [
+                    {
+                        "type": "function",
+                        "handler": "end_conversation"
+                    }
+                ],
+                "role_messages": [],
+                "task_messages": [
+                    {
+                        "role": "system",
+                        "content": "Say a brief, friendly goodbye. Keep it to one short sentence. Example: Goodbye! or Have a great day!"
+                    }
+                ]
+            }
+        ],
+        "initial_node": "initial",
+        "end_conversation_callbacks": []
+    },
+    "expected_payload_schema": {
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "quantity": {
+                        "type": "number"
+                    },
+                    "product_name": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "shop_name": {
+            "type": "string"
+        },
+        "total_price": {
+            "type": "number"
+        },
+        "customer_name": {
+            "type": "string"
+        },
+        "customer_mobile_number": {
+            "type": "string"
+        }
+    },
+    "expected_callback_response_schema": {},
+    "configurations": {
+        "stt_configuration": null,
+        "stt_language": "en",
+        "soniox_context": null,
+        "payload_based_language_selection": false,
+        "tts_voice_name": "rhea",
+        "mira_voice_id": null,
+        "cartesia_voice_configurations": null,
+        "elevenlabs_voice_configurations": null,
+        "tts_selection_config": null,
+        "enable_background_sound": false,
+        "background_sound_file": null,
+        "background_sound_volume": 2.0,
+        "initial_greeting": null,
+        "ivr_greeting": null,
+        "ivr_goodbye": null,
+        "ivr_priority": null,
+        "transfer_number": null,
+        "vad_config": null,
+        "enable_inbound": false,
+        "user_idle_configuration": null,
+        "noise_filter": null,
+        "keyword_filter": null,
+        "interruption": null,
+        "llm_configurations": null
+    },
+    "secrets": null,
+    "outbound_number_id": "d1bdeec9-3e72-4c7f-a060-a1b672d0457b",
+    "is_active": true
+}
+
+
+
+//current-demo-template
